@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model categoria {
+  id_categoria String    @id @default(uuid()) @db.Uuid
+  nome         String?   @db.VarChar(50)
+  produto      produto[]
+}
+
+model cliente {
+  id_cliente String   @id @default(uuid()) @db.Uuid
+  telefone   String?  @db.VarChar
+  endereco   String?  @db.VarChar
+  id_usuario String?  @db.Uuid
+  usuario    usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  pedido     pedido[]
+}
+
+model funcionario {
+  id_funcionario String   @id @default(uuid()) @db.Uuid
+  cargo          String   @db.VarChar(30)
+  comissao       String?  @db.VarChar(15)
+  id_usuario     String?  @db.Uuid
+  usuario        usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  pedido         pedido[]
+}
+
+model itens_pedido {
+  id_itens_pedido String   @id @default(uuid()) @db.Uuid
+  id_pedido       String?  @db.Uuid
+  id_produto      String?  @db.Uuid
+  quantidade      Int?
+  preco_unit      Decimal? @db.Decimal(10, 2)
+  produto         produto? @relation(fields: [id_produto], references: [id_produto], onDelete: NoAction, onUpdate: NoAction)
+  pedido          pedido?  @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pedido {
+  id_pedido      String         @id @default(uuid()) @db.Uuid
+  data_hora      String?
+  status         Int
+  valor_total    Decimal?       @db.Decimal(10, 2)
+  id_cliente     String?        @db.Uuid
+  id_funcionario String?        @db.Uuid
+  itens_pedido   itens_pedido[]
+  cliente        cliente?       @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
+  funcionario    funcionario?   @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model produto {
+  id_produto   String         @id @default(uuid()) @db.Uuid
+  nome         String         @db.VarChar(50)
+  descricao    String?
+  preco        Decimal?       @db.Decimal(10, 2)
+  id_categoria String?        @db.Uuid
+  id_status    String?        @db.Uuid
+  itens_pedido itens_pedido[]
+  categoria    categoria?     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model usuario {
+  id_usuario  String        @id @default(uuid()) @db.Uuid
+  nome        String        @db.VarChar
+  email       String        @unique @db.VarChar
+  senha       String?       @db.VarChar
+  tipo        tipo          @default(CLIENTE)
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  updated_at  DateTime      @default(now()) @db.Timestamp(6)
+  cliente     cliente[]
+  funcionario funcionario[]
+}
+
+enum tipo {
+  CLIENTE
+  FUNCIONARIO
+  ADMIN
+}
