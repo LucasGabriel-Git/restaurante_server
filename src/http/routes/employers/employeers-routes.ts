@@ -6,7 +6,7 @@ export const createEmployeeRoute: FastifyPluginAsync = async (app) => {
 }
 
 export const listEmployeeRoute: FastifyPluginAsync = async (app) => {
-	app.get('/employeers', new FuncionarioController().list)
+	app.get('/employees', new FuncionarioController().list)
 }
 
 export const updateEmployeeRoute: FastifyPluginAsync = async (app) => {

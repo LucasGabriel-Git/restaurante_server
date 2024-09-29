@@ -3,27 +3,21 @@ import { z } from 'zod'
 import { prisma } from '../client/prisma'
 import { hash } from 'bcrypt'
 
-const commonUserSchema = z.object({
-	nome: z.string().min(1, 'Nome é obrigatório'),
-	email: z.string().email('Email inválido'),
-	senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-})
-
-const funcionarioSchema = z.object({
-	cargo: z.string().min(1, 'Cargo é obrigatório'),
+const EmployeerSchema = z.object({
+	nome: z.string(),
+	email: z.string().email(),
+	senha: z.string(),
+	cargo: z.string(),
+	tipo: z.literal('FUNCIONARIO').default('FUNCIONARIO'),
 	comissao: z.string().optional(),
 })
-const BodySchema = z.union([
-	commonUserSchema.extend({ tipo: z.literal('CLIENTE') }),
-	commonUserSchema
-		.merge(funcionarioSchema)
-		.extend({ tipo: z.literal('FUNCIONARIO') }),
-])
+
+type BodySchema = z.infer<typeof EmployeerSchema>
 
 export class FuncionarioController {
 	async save(req: FastifyRequest, res: FastifyReply) {
 		try {
-			const data = BodySchema.parse(req.body)
+			const data = req.body as BodySchema
 			const decodedUser = (await req.jwtVerify()) as { id: string }
 			const userHasExists = await prisma.usuario.findFirst({
 				where: {
@@ -53,7 +47,7 @@ export class FuncionarioController {
 						nome: data.nome,
 						email: String(data.email),
 						senha: hashedPassword,
-						tipo: data.tipo,
+						tipo: 'FUNCIONARIO',
 						funcionario: {
 							create: {
 								cargo: data.cargo,
@@ -109,13 +103,22 @@ export class FuncionarioController {
 
 	async update(req: FastifyRequest, res: FastifyReply) {
 		try {
-			const data = BodySchema.parse(req.body)
+			const data = req.body as BodySchema
 			const { id } = req.params as { id: string }
 			const decodedUser = (await req.jwtVerify()) as { id: string }
 
 			const userHasExists = await prisma.funcionario.findFirst({
 				where: {
 					id_funcionario: id,
+				},
+				select: {
+					usuario: {
+						select: {
+							email: true,
+							tipo: true,
+							nome: true,
+						},
+					},
 				},
 			})
 
@@ -156,8 +159,8 @@ export class FuncionarioController {
 						usuario: {
 							update: {
 								nome: data.nome,
-								email: String(data.email),
-								senha: await hash(data.senha, 6),
+								email: data.email,
+								senha: data.senha ? await hash(data.senha, 6) : undefined,
 							},
 						},
 					},
@@ -182,6 +185,7 @@ export class FuncionarioController {
 			}
 		} catch (error) {
 			if (error instanceof Error) {
+				console.log(error.message)
 				return res.status(400).send({ error: error.message })
 			}
 		}

@@ -43,6 +43,15 @@ export class UsuarioController {
 
 	async list(req: FastifyRequest, res: FastifyReply) {
 		try {
+			const decoded = (await req.jwtVerify()) as { id: string }
+
+			const userLogged = await prisma.usuario.findFirst({
+				where: {
+					id_usuario: decoded.id,
+				},
+			})
+			console.log(decoded)
+
 			const users = await prisma.usuario.findMany({
 				select: {
 					id_usuario: true,
@@ -54,11 +63,19 @@ export class UsuarioController {
 				},
 			})
 
-			if (users.length === 0) return res.send({ message: 'No users found' })
-			return res.send(users)
+			if (userLogged?.tipo === 'ADMIN' || userLogged?.tipo === 'FUNCIONARIO') {
+				return res.send({ users })
+			}
+
+			if (userLogged?.tipo === 'CLIENTE' && users.length > 0) {
+				return res.status(401).send({ error: 'Unauthorized' })
+			}
+			if (users.length === 0) {
+				return res.send({ message: 'No users found' })
+			}
 		} catch (error) {
 			if (error instanceof Error) {
-				console.log(error.message)
+				return res.status(400).send({ error: error.message })
 			}
 		}
 	}
@@ -131,10 +148,10 @@ export class UsuarioController {
 				{
 					id: user.id_usuario,
 					nome: user.nome,
-					id_cliente: user.cliente[0]?.id_cliente,
+					id_cliente: user.cliente?.id_cliente,
 				},
 				{
-					expiresIn: '1h',
+					expiresIn: '2h',
 				},
 			)
 

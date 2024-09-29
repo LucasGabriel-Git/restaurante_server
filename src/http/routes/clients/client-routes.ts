@@ -10,5 +10,5 @@ export const listClientRoute: FastifyPluginAsync = async (app) => {
 }
 
 export const deleteClientRoute: FastifyPluginAsync = async (app) => {
-	app.delete('/client/:id', new ClienteController().delete)
+	app.delete('/client/:id_cliente', new ClienteController().delete)
 }

@@ -1,8 +1,8 @@
-import { tipo } from '@prisma/client'
 import { hash } from 'bcrypt'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { prisma } from 'src/client/prisma'
 import { z } from 'zod'
+import PDFDocument from 'pdfkit'
 
 const ClientSchema = z.object({
 	nome: z.string().min(1, 'Nome é obrigatório'),
@@ -20,13 +20,13 @@ export class ClienteController {
 		try {
 			const data = req.body as BodySchema
 
-			const userHasExists = await prisma.cliente.findFirst({
+			const userHasExists = await prisma.usuario.findFirst({
 				where: {
-					usuario: {
-						email: data.email,
-					},
+					email: data.email,
 				},
 			})
+
+			console.log(userHasExists)
 
 			if (data.tipo === 'CLIENTE' && !userHasExists) {
 				const hashedPassword = await hash(data.senha, 6)
@@ -63,9 +63,11 @@ export class ClienteController {
 				return res.send(client)
 			}
 
-			return res.status(400).send({
-				error: 'This email is already in use',
-			})
+			if (userHasExists) {
+				return res.status(400).send({
+					error: 'This email is already in use',
+				})
+			}
 		} catch (error) {
 			if (error instanceof Error) {
 				return res.status(400).send({ error: error.message })
@@ -111,43 +113,52 @@ export class ClienteController {
 
 	async delete(req: FastifyRequest, res: FastifyReply) {
 		try {
-			const decodedUser = (await req.jwtVerify()) as {
-				id: string
-				id_cliente: string
-			}
-			console.log(decodedUser)
+			const decodedUser = (await req.jwtVerify()) as { id: string }
+			const { id_cliente } = req.params as { id_cliente: string }
 
-			const isClient = await prisma.cliente.findFirst({
+			// Verifica se o id_cliente foi passado corretamente
+			if (!id_cliente) {
+				return res.status(400).send({
+					error: 'Client ID is required',
+				})
+			}
+
+			const client = await prisma.usuario.findFirst({
 				where: {
-					id_cliente: decodedUser.id_cliente,
-					AND: [
-						{
-							usuario: {
-								tipo: 'CLIENTE',
-							},
-						},
-					],
+					id_usuario: decodedUser.id, // Verifica se o id do token corresponde ao id_usuario
+					cliente: {
+						id_cliente, // Verifica se o cliente é dono da conta
+					},
 				},
 			})
 
-			if (isClient) {
-				await prisma.cliente
-					.delete({
-						where: {
-							id_cliente: isClient.id_cliente,
-						},
-					})
-					.then(() => {
-						return res.send({
-							message: 'Client deleted',
-						})
-					})
-					.catch((error) => {
-						return res.status(400).send({ error: error.message })
-					})
+			if (!client) {
+				return res.status(403).send({
+					error: 'Client not found',
+				})
 			}
 
-			return res.status(400).send({ error: 'Client not found' })
+			await prisma
+				.$transaction(async (prisma) => {
+					// Deletar o cliente vinculado
+					await prisma.cliente.delete({
+						where: { id_cliente },
+					})
+
+					// Deletar o usuário vinculado ao cliente
+					await prisma.usuario.delete({
+						where: { id_usuario: decodedUser.id },
+					})
+				})
+				.then(() => {
+					return res.send({
+						message: 'Client deleted successfully',
+					})
+				})
+
+			return res.status(403).send({
+				error: 'You do not have permission to delete this client',
+			})
 		} catch (error) {
 			if (error instanceof Error) {
 				return res.status(400).send({ error: error.message })

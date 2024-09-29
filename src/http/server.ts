@@ -1,10 +1,24 @@
 import fastifyCors from '@fastify/cors'
+import fastifyJwt from '@fastify/jwt'
+import 'dotenv/config'
 import fastify from 'fastify'
 import {
 	type ZodTypeProvider,
 	serializerCompiler,
 	validatorCompiler,
 } from 'fastify-type-provider-zod'
+import { env } from '../env'
+import {
+	createClientRoute,
+	deleteClientRoute,
+	listClientRoute,
+} from './routes/clients/client-routes'
+import {
+	createEmployeeRoute,
+	deleteEmployeeRoute,
+	listEmployeeRoute,
+	updateEmployeeRoute,
+} from './routes/employers/employeers-routes'
 import {
 	createUserRoute,
 	deleteUserRoute,
@@ -13,20 +27,6 @@ import {
 	loginRoute,
 	updateUserRoute,
 } from './routes/users/user-routes'
-import { env } from '../env'
-import 'dotenv/config'
-import fastifyJwt from '@fastify/jwt'
-import {
-	createEmployeeRoute,
-	deleteEmployeeRoute,
-	listEmployeeRoute,
-	updateEmployeeRoute,
-} from './routes/employers/employeers-routes'
-import {
-	createClientRoute,
-	deleteClientRoute,
-	listClientRoute,
-} from './routes/clients/client-routes'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 app.setValidatorCompiler(validatorCompiler)
