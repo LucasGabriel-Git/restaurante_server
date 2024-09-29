@@ -2,14 +2,13 @@ import { hash } from 'bcrypt'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { prisma } from 'src/client/prisma'
 import { z } from 'zod'
-import PDFDocument from 'pdfkit'
 
 const ClientSchema = z.object({
-	nome: z.string().min(1, 'Nome é obrigatório'),
-	email: z.string().email('Email inválido'),
-	senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-	telefone: z.string().min(1, 'Telefone é obrigatório'),
-	endereco: z.string().min(1, 'Endereço é obrigatório'),
+	nome: z.string(),
+	email: z.string(),
+	senha: z.string(),
+	telefone: z.string(),
+	endereco: z.string(),
 	tipo: z.literal('CLIENTE'),
 })
 
@@ -77,27 +76,51 @@ export class ClienteController {
 
 	async list(req: FastifyRequest, res: FastifyReply) {
 		try {
-			const clients = await prisma.cliente.findMany({
-				where: { usuario: { tipo: 'CLIENTE' } },
-				select: {
-					id_cliente: true,
-					telefone: true,
-					endereco: true,
-					usuario: {
-						select: {
-							id_usuario: true,
-							nome: true,
-							email: true,
-							tipo: true,
-							created_at: true,
+			const token = req.headers.authorization
+			if (token === undefined)
+				return res.status(401).send({ error: 'Unauthorized' })
+
+			const decoded = (await req.jwtVerify()) as { id: string }
+
+			const userLogged = await prisma.usuario.findFirst({
+				where: {
+					id_usuario: decoded.id,
+					OR: [
+						{
+							tipo: 'ADMIN',
 						},
-					},
+						{
+							tipo: 'FUNCIONARIO',
+						},
+					],
 				},
 			})
 
-			if (clients.length === 0) return res.send({ message: 'No clients found' })
-
-			return res.send(clients)
+			if (userLogged) {
+				const clients = await prisma.cliente.findMany({
+					where: { usuario: { tipo: 'CLIENTE' } },
+					select: {
+						id_cliente: true,
+						telefone: true,
+						endereco: true,
+						usuario: {
+							select: {
+								id_usuario: true,
+								nome: true,
+								email: true,
+								tipo: true,
+								created_at: true,
+							},
+						},
+					},
+				})
+				if (clients.length === 0)
+					return res.send({ message: 'No clients found' })
+				return res.status(200).send(clients)
+			}
+			return res.status(401).send({
+				error: 'Only administrators or employees can view client list',
+			})
 		} catch (error) {
 			if (error instanceof Error) {
 				return res.status(400).send({ error: error.message })
@@ -108,7 +131,66 @@ export class ClienteController {
 	async update(req: FastifyRequest, res: FastifyReply) {
 		try {
 			const data = req.body as BodySchema
-		} catch (error) {}
+
+			const decoded = (await req.jwtVerify()) as {
+				id: string
+				id_cliente: string
+			}
+
+			// Verifica se o id do token corresponde ao id do cliente
+			const userLogged = await prisma.usuario.findFirst({
+				where: {
+					id_usuario: decoded.id,
+					AND: [
+						{
+							cliente: {
+								id_cliente: decoded.id_cliente,
+							},
+						},
+					],
+				},
+			})
+
+			console.log(userLogged)
+
+			if (!userLogged) {
+				return res.status(401).send({ error: 'Unauthorized' })
+			}
+
+			if (userLogged) {
+				await prisma.cliente
+					.update({
+						where: {
+							id_cliente: decoded.id_cliente,
+						},
+						data: {
+							usuario: {
+								update: {
+									data: {
+										nome: data.nome,
+										email: data.email,
+										tipo: data.tipo,
+									},
+								},
+							},
+							telefone: data.telefone,
+							endereco: data.endereco,
+						},
+					})
+					.then((client) => {
+						return res.send(client)
+					})
+					.catch((error) => {
+						return res.status(400).send({
+							error: error.message,
+						})
+					})
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				return res.status(400).send({ error: error.message })
+			}
+		}
 	}
 
 	async delete(req: FastifyRequest, res: FastifyReply) {

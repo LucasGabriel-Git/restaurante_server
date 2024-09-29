@@ -50,7 +50,6 @@ export class UsuarioController {
 					id_usuario: decoded.id,
 				},
 			})
-			console.log(decoded)
 
 			const users = await prisma.usuario.findMany({
 				select: {

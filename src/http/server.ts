@@ -12,6 +12,7 @@ import {
 	createClientRoute,
 	deleteClientRoute,
 	listClientRoute,
+	updateClientRoute,
 } from './routes/clients/client-routes'
 import {
 	createEmployeeRoute,
@@ -36,26 +37,22 @@ app.register(fastifyCors, {
 	origin: '*',
 })
 
-app.register(createUserRoute)
-app.register(listUserRoute)
-app.register(updateUserRoute)
-app.register(deleteUserRoute)
-
-app.register(getUserLoggedRoute)
-app.register(loginRoute)
-
-app.register(createEmployeeRoute)
-app.register(listEmployeeRoute)
-app.register(updateEmployeeRoute)
-app.register(deleteEmployeeRoute)
-
-app.register(createClientRoute)
-app.register(listClientRoute)
-app.register(deleteClientRoute)
-
-app.register(fastifyJwt, {
-	secret: env.JWT_SECRET,
-})
+app
+	.register(createUserRoute)
+	.register(listUserRoute)
+	.register(updateUserRoute)
+	.register(deleteUserRoute)
+	.register(getUserLoggedRoute)
+	.register(loginRoute)
+	.register(createEmployeeRoute)
+	.register(listEmployeeRoute)
+	.register(updateEmployeeRoute)
+	.register(deleteEmployeeRoute)
+	.register(createClientRoute)
+	.register(listClientRoute)
+	.register(deleteClientRoute)
+	.register(updateClientRoute)
+	.register(fastifyJwt, { secret: env.JWT_SECRET })
 
 app.setErrorHandler((error, _, reply) => {
 	if (error instanceof Error) {
