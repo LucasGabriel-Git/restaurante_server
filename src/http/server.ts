@@ -28,6 +28,10 @@ import {
 	loginRoute,
 	updateUserRoute,
 } from './routes/users/user-routes'
+import {
+	createCategoryRoute,
+	listCategoryRoute,
+} from './routes/categories/category-routes'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 app.setValidatorCompiler(validatorCompiler)
@@ -51,7 +55,8 @@ app
 	.register(createClientRoute)
 	.register(listClientRoute)
 	.register(deleteClientRoute)
-	.register(updateClientRoute)
+	.register(createCategoryRoute)
+	.register(listCategoryRoute)
 	.register(fastifyJwt, { secret: env.JWT_SECRET })
 
 app.setErrorHandler((error, _, reply) => {
