@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify'
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { CategoriaController } from 'src/controller/CategoriaController'
 
 export const createCategoryRoute: FastifyPluginAsync = async (app) => {

@@ -11,7 +11,6 @@ const paramsSchema = z.object({
 })
 
 type BodySchema = z.infer<typeof bodySchema>
-type ParamsSchema = z.infer<typeof paramsSchema>
 
 export class CategoriaController {
 	async save(req: FastifyRequest, res: FastifyReply) {
@@ -74,8 +73,20 @@ export class CategoriaController {
 				})
 			}
 
-			// const categories =
-			return res.send(await prisma.categoria.findMany())
+			return res.send(
+				await prisma.categoria.findMany({
+					select: {
+						id_categoria: true,
+						nome: true,
+						produto: {
+							select: {
+								nome: true,
+								descricao: true,
+							},
+						},
+					},
+				}),
+			)
 		} catch (error) {
 			if (error instanceof Error) {
 				return res.status(400).send({ error: error.message })

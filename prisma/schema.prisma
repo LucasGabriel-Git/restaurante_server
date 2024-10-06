@@ -17,8 +17,8 @@ model cliente {
   id_cliente String   @id @default(uuid()) @db.Uuid
   telefone   String?  @db.VarChar
   endereco   String?  @db.VarChar
-  id_usuario String  @db.Uuid @unique
-  usuario    usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  id_usuario String   @unique @db.Uuid
+  usuario    usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
   pedido     pedido[]
 }
 
@@ -26,7 +26,7 @@ model funcionario {
   id_funcionario String   @id @default(uuid()) @db.Uuid
   cargo          String   @db.VarChar(30)
   comissao       String?  @db.VarChar(15)
-  id_usuario     String?  @db.Uuid @unique
+  id_usuario     String?  @unique @db.Uuid
   usuario        usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
   pedido         pedido[]
 }
@@ -59,21 +59,29 @@ model produto {
   descricao    String?
   preco        Decimal?       @db.Decimal(10, 2)
   id_categoria String?        @db.Uuid
-  id_status    String?        @db.Uuid
   itens_pedido itens_pedido[]
   categoria    categoria?     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  id_estoque   String?        @unique @db.Uuid
+  estoque      estoque?
 }
 
 model usuario {
-  id_usuario  String        @id @default(uuid()) @db.Uuid 
-  nome        String        @db.VarChar
-  email       String        @unique @db.VarChar
-  senha       String?       @db.VarChar
-  tipo        tipo          @default(CLIENTE)
-  created_at  DateTime      @default(now()) @db.Timestamp(6)
-  updated_at  DateTime      @default(now()) @db.Timestamp(6)
+  id_usuario  String       @id @default(uuid()) @db.Uuid
+  nome        String       @db.VarChar
+  email       String       @unique @db.VarChar
+  senha       String?      @db.VarChar
+  tipo        tipo         @default(CLIENTE)
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  updated_at  DateTime     @default(now()) @db.Timestamp(6)
   cliente     cliente?
   funcionario funcionario?
+}
+
+model estoque {
+  id_estoque String  @id @default(uuid()) @db.Uuid
+  quantidade Int
+  id_produto String  @unique @db.Uuid
+  produto    produto @relation(fields: [id_produto], references: [id_produto])
 }
 
 enum tipo {

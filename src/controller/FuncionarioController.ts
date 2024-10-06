@@ -69,12 +69,23 @@ export class FuncionarioController {
 	}
 	async list(req: FastifyRequest, res: FastifyReply) {
 		try {
-			const users = await prisma.funcionario.findMany({
+			const token = req.headers.authorization
+			if (token === undefined)
+				return res.status(401).send({ error: 'Unauthorized' })
+
+			const decodedUser = (await req.jwtVerify()) as { id: string }
+
+			const userHasPermission = await prisma.usuario.findFirst({
 				where: {
-					usuario: {
-						tipo: 'FUNCIONARIO',
-					},
+					id_usuario: decodedUser.id,
+					AND: [{ OR: [{ tipo: 'ADMIN' }, { tipo: 'FUNCIONARIO' }] }],
 				},
+			})
+
+			if (!userHasPermission)
+				return res.status(404).send({ error: 'Unauthorized' })
+
+			const users = await prisma.funcionario.findMany({
 				select: {
 					id_funcionario: true,
 					cargo: true,
