@@ -44,7 +44,7 @@ model itens_pedido {
 model pedido {
   id_pedido      String         @id @default(uuid()) @db.Uuid
   data_hora      String?
-  status         Int
+  status         Status         @default(PENDENTE)
   valor_total    Decimal?       @db.Decimal(10, 2)
   id_cliente     String?        @db.Uuid
   id_funcionario String?        @db.Uuid
@@ -88,4 +88,10 @@ enum tipo {
   CLIENTE
   FUNCIONARIO
   ADMIN
+}
+
+enum Status {
+  PENDENTE
+  FINALIZADO
+  CANCELADO
 }

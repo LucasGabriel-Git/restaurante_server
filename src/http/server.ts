@@ -9,10 +9,13 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from '../env'
 import {
+	createCategoryRoute,
+	listCategoryRoute,
+} from './routes/categories/category-routes'
+import {
 	createClientRoute,
 	deleteClientRoute,
 	listClientRoute,
-	updateClientRoute,
 } from './routes/clients/client-routes'
 import {
 	createEmployeeRoute,
@@ -21,6 +24,17 @@ import {
 	updateEmployeeRoute,
 } from './routes/employers/employeers-routes'
 import {
+	cancelOrderRoute,
+	createOrderRoute,
+	listOrderRoute,
+	updateOrderStatusRoute,
+} from './routes/orders/order-routes'
+import {
+	createProductRoute,
+	getProductsList,
+	updateProductRoute,
+} from './routes/product/product-routes'
+import {
 	createUserRoute,
 	deleteUserRoute,
 	getUserLoggedRoute,
@@ -28,14 +42,6 @@ import {
 	loginRoute,
 	updateUserRoute,
 } from './routes/users/user-routes'
-import {
-	createCategoryRoute,
-	listCategoryRoute,
-} from './routes/categories/category-routes'
-import {
-	createProductRoute,
-	getProductsList,
-} from './routes/product/product-routes'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 app.setValidatorCompiler(validatorCompiler)
@@ -63,6 +69,11 @@ app
 	.register(listCategoryRoute)
 	.register(createProductRoute)
 	.register(getProductsList)
+	.register(updateProductRoute)
+	.register(createOrderRoute)
+	.register(listOrderRoute)
+	.register(updateOrderStatusRoute)
+	.register(cancelOrderRoute)
 	.register(fastifyJwt, { secret: env.JWT_SECRET })
 
 app.setErrorHandler((error, _, reply) => {
