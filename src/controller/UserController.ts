@@ -132,6 +132,7 @@ export class UsuarioController {
 				},
 				include: {
 					cliente: true,
+					funcionario: true,
 				},
 			})
 
@@ -147,10 +148,13 @@ export class UsuarioController {
 				{
 					id: user.id_usuario,
 					nome: user.nome,
-					id_cliente: user.cliente?.id_cliente,
+					id_cliente: user.cliente ? user.cliente.id_cliente : null,
+					id_funcionario: user.funcionario
+						? user.funcionario.id_funcionario
+						: null,
 				},
 				{
-					expiresIn: '2h',
+					expiresIn: '8h',
 				},
 			)
 

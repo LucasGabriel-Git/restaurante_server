@@ -15,6 +15,8 @@ type IProduto = z.infer<typeof DataSchema>
 export class ProdutosController {
 	async create(req: FastifyRequest, res: FastifyReply) {
 		try {
+			if (!req.headers.authorization)
+				return res.status(400).send({ error: 'Unauthorized' })
 			const data = req.body as IProduto
 			const payload = (await req.jwtDecode()) as { id: string }
 			const userHasPermission = await prisma.usuario.findFirst({
@@ -87,10 +89,13 @@ export class ProdutosController {
 		}
 	}
 
-	async list(req: FastifyRequest, res: FastifyReply) {
+	async update(req: FastifyRequest, res: FastifyReply) {
 		try {
+			if (!req.headers.authorization)
+				return res.status(400).send({ error: 'Unauthorized' })
+			const data = req.body as IProduto
+			const { productId } = req.params as { productId: string }
 			const payload = (await req.jwtDecode()) as { id: string }
-
 			const userHasPermission = await prisma.usuario.findFirst({
 				where: {
 					id_usuario: payload.id,
@@ -108,31 +113,98 @@ export class ProdutosController {
 					],
 				},
 			})
+			if (!userHasPermission) {
+				return res.code(401).send({ message: 'Unauthorized' })
+			}
 
-			if (userHasPermission)
-				return res.status(200).send(
-					await prisma.produto.findMany({
-						select: {
-							nome: true,
-							descricao: true,
-							preco: true,
-							categoria: {
-								select: {
-									id_categoria: true,
-									nome: true,
+			if (userHasPermission) {
+				const hasProduct = await prisma.produto.findFirst({
+					where: {
+						nome: data.nome,
+					},
+				})
+				if (hasProduct) {
+					await prisma.produto
+						.update({
+							where: {
+								id_produto: productId,
+							},
+							data: {
+								nome: data.nome,
+								preco: data.preco,
+								descricao: data.descricao,
+								id_categoria: data.id_categoria,
+								estoque: {
+									update: {
+										quantidade: data.quantidade,
+									},
 								},
 							},
-							estoque: {
-								select: {
-									quantidade: true,
-								},
+						})
+						.then((_) => {
+							return res
+								.status(200)
+								.send({ message: 'Product updated successfully' })
+						})
+						.catch((err) => {
+							return res.status(500).send({ message: err.message })
+						})
+				}
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				return res.status(400).send({ error: error.message })
+			}
+		}
+	}
+
+	async list(req: FastifyRequest, res: FastifyReply) {
+		try {
+			const token = req.headers.authorization
+
+			if (token === undefined || token === null)
+				return res.status(401).send({ error: 'Unauthorized' })
+
+			const payload = (await req.jwtDecode()) as { id: string }
+
+			const userHasPermission = await prisma.usuario.findFirst({
+				where: {
+					id_usuario: payload.id,
+					OR: [{ tipo: 'ADMIN' }, { tipo: 'FUNCIONARIO' }],
+				},
+			})
+
+			if (!userHasPermission) {
+				return res.status(401).send({
+					error: 'Only admins can access this page.',
+				})
+			}
+			return res.status(200).send(
+				await prisma.produto.findMany({
+					select: {
+						id_produto: true,
+						nome: true,
+						descricao: true,
+						preco: true,
+						categoria: {
+							select: {
+								id_categoria: true,
+								nome: true,
 							},
 						},
-					}),
-				)
-
-			if (!userHasPermission)
-				return res.status(401).send({ error: 'Unauthorized' })
-		} catch (err) {}
+						estoque: {
+							select: {
+								quantidade: true,
+							},
+						},
+					},
+				}),
+			)
+		} catch (err) {
+			if (err instanceof Error) {
+				console.log(err.message)
+				return res.status(400).send({ error: err.message })
+			}
+		}
 	}
 }
