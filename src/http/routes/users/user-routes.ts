@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
-import { UsuarioController } from '../../../controller/UsuarioController'
+import { UsuarioController } from '../../../controller/UserController'
 
 export const createUserRoute: FastifyPluginAsync = async (app) => {
 	app.post('/user', new UsuarioController().save)

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { ClienteController } from 'src/controller/ClienteController'
+import { ClienteController } from 'src/controller/ClientController'
 
 export const createClientRoute: FastifyPluginAsync = async (app) => {
 	app.post('/client', new ClienteController().save)

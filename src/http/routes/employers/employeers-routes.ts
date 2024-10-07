@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
-import { FuncionarioController } from 'src/controller/FuncionarioController'
+import { FuncionarioController } from 'src/controller/EmployeeController'
 
 export const createEmployeeRoute: FastifyPluginAsync = async (app) => {
 	app.post('/employee', new FuncionarioController().save)

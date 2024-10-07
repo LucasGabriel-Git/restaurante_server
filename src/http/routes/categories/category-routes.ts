@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
-import { CategoriaController } from 'src/controller/CategoriaController'
+import { CategoriaController } from 'src/controller/CategoryController'
 
 export const createCategoryRoute: FastifyPluginAsync = async (app) => {
 	app.post('/category', new CategoriaController().save)
