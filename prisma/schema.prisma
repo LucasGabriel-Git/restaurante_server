@@ -42,27 +42,30 @@ model itens_pedido {
 }
 
 model pedido {
-  id_pedido      String         @id @default(uuid()) @db.Uuid
-  data_hora      String?
-  status         Status         @default(PENDENTE)
-  valor_total    Decimal?       @db.Decimal(10, 2)
-  id_cliente     String?        @db.Uuid
-  id_funcionario String?        @db.Uuid
-  itens_pedido   itens_pedido[]
-  cliente        cliente?       @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
-  funcionario    funcionario?   @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction)
+  id_pedido           String         @id @default(uuid()) @db.Uuid
+  data_hora           String?
+  numero_pedido       Int?           @default(autoincrement())
+  tempo_preparo_total Int?
+  status              Status         @default(PENDENTE)
+  valor_total         Decimal?       @db.Decimal(10, 2)
+  id_cliente          String?        @db.Uuid
+  id_funcionario      String?        @db.Uuid
+  itens_pedido        itens_pedido[]
+  cliente             cliente?       @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
+  funcionario         funcionario?   @relation(fields: [id_funcionario], references: [id_funcionario], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model produto {
-  id_produto   String         @id @default(uuid()) @db.Uuid
-  nome         String         @db.VarChar(50)
-  descricao    String?
-  preco        Decimal?       @db.Decimal(10, 2)
-  id_categoria String?        @db.Uuid
-  itens_pedido itens_pedido[]
-  categoria    categoria?     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
-  id_estoque   String?        @unique @db.Uuid
-  estoque      estoque?
+  id_produto    String         @id @default(uuid()) @db.Uuid
+  nome          String         @db.VarChar(50)
+  descricao     String?
+  preco         Decimal?       @db.Decimal(10, 2)
+  id_categoria  String?        @db.Uuid
+  tempo_preparo Int?
+  itens_pedido  itens_pedido[]
+  categoria     categoria?     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  id_estoque    String?        @unique @db.Uuid
+  estoque       estoque?
 }
 
 model usuario {

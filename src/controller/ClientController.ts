@@ -25,8 +25,6 @@ export class ClienteController {
 				},
 			})
 
-			console.log(userHasExists)
-
 			if (data.tipo === 'CLIENTE' && !userHasExists) {
 				const hashedPassword = await hash(data.senha, 6)
 

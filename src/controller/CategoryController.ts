@@ -56,8 +56,45 @@ export class CategoriaController {
 			}
 		}
 	}
+	async update(req: FastifyRequest, res: FastifyReply) {
+		try {
+			const token = req.headers.authorization
+			if (!token) return res.status(401).send({ error: 'Tokens missing' })
+			const { id } = req.params as { id: string }
+			const data = req.body as BodySchema
+			const payload = (await req.jwtDecode()) as { id: string }
+			const userHasPermission = await prisma.usuario.findFirst({
+				where: {
+					id_usuario: payload.id,
+					OR: [{ tipo: 'ADMIN' }, { tipo: 'FUNCIONARIO' }],
+				},
+			})
 
-	async update(req: FastifyRequest, res: FastifyReply) {}
+			if (userHasPermission) {
+				await prisma.categoria
+					.update({
+						data,
+						where: {
+							id_categoria: id,
+						},
+					})
+					.then(() => {
+						return res.status(200).send({
+							message: 'Category updated successfully',
+						})
+					})
+					.catch((error) => {
+						return res.status(400).send({
+							error: error.message,
+						})
+					})
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				return res.status(400).send({ error: error.message })
+			}
+		}
+	}
 
 	async delete(req: FastifyRequest, res: FastifyReply) {}
 

@@ -8,40 +8,12 @@ import {
 	validatorCompiler,
 } from 'fastify-type-provider-zod'
 import { env } from '../env'
-import {
-	createCategoryRoute,
-	listCategoryRoute,
-} from './routes/categories/category-routes'
-import {
-	createClientRoute,
-	deleteClientRoute,
-	listClientRoute,
-} from './routes/clients/client-routes'
-import {
-	createEmployeeRoute,
-	deleteEmployeeRoute,
-	listEmployeeRoute,
-	updateEmployeeRoute,
-} from './routes/employers/employeers-routes'
-import {
-	cancelOrderRoute,
-	createOrderRoute,
-	listOrderRoute,
-	updateOrderStatusRoute,
-} from './routes/orders/order-routes'
-import {
-	createProductRoute,
-	getProductsList,
-	updateProductRoute,
-} from './routes/product/product-routes'
-import {
-	createUserRoute,
-	deleteUserRoute,
-	getUserLoggedRoute,
-	listUserRoute,
-	loginRoute,
-	updateUserRoute,
-} from './routes/users/user-routes'
+import { categoryRoutes } from './routes/categories/category-routes'
+import { clientRoutes } from './routes/clients/client-routes'
+import { employeesRoutes } from './routes/employees/employeers-routes'
+import { orderRoutes } from './routes/orders/order-routes'
+import { productRoutes } from './routes/product/product-routes'
+import { userRoutes } from './routes/users/user-routes'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 app.setValidatorCompiler(validatorCompiler)
@@ -52,28 +24,12 @@ app.register(fastifyCors, {
 })
 
 app
-	.register(createUserRoute)
-	.register(listUserRoute)
-	.register(updateUserRoute)
-	.register(deleteUserRoute)
-	.register(getUserLoggedRoute)
-	.register(loginRoute)
-	.register(createEmployeeRoute)
-	.register(listEmployeeRoute)
-	.register(updateEmployeeRoute)
-	.register(deleteEmployeeRoute)
-	.register(createClientRoute)
-	.register(listClientRoute)
-	.register(deleteClientRoute)
-	.register(createCategoryRoute)
-	.register(listCategoryRoute)
-	.register(createProductRoute)
-	.register(getProductsList)
-	.register(updateProductRoute)
-	.register(createOrderRoute)
-	.register(listOrderRoute)
-	.register(updateOrderStatusRoute)
-	.register(cancelOrderRoute)
+	.register(userRoutes)
+	.register(employeesRoutes)
+	.register(clientRoutes)
+	.register(categoryRoutes)
+	.register(productRoutes)
+	.register(orderRoutes)
 	.register(fastifyJwt, { secret: env.JWT_SECRET })
 
 app.setErrorHandler((error, _, reply) => {

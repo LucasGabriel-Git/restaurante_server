@@ -8,6 +8,8 @@ const DataSchema = z.object({
 	preco: z.coerce.number(),
 	id_categoria: z.string(),
 	quantidade: z.number(),
+	tempo_preparo: z.coerce.number(),
+	imagem: z.string(),
 })
 
 type IProduto = z.infer<typeof DataSchema>
@@ -61,6 +63,7 @@ export class ProdutosController {
 									id_categoria: data.id_categoria,
 								},
 							},
+							tempo_preparo: data.tempo_preparo,
 						},
 					})
 					.then(async (_p) => {
@@ -197,6 +200,7 @@ export class ProdutosController {
 								quantidade: true,
 							},
 						},
+						tempo_preparo: true,
 					},
 				}),
 			)
